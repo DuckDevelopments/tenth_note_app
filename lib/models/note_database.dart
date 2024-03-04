@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tenth_note_app/models/note.dart';
 
-class NoteDatabse {
+class NoteDatabase extends ChangeNotifier {
   static late Isar isar;
 
   //INITIALIZE DATABASE
@@ -34,7 +35,22 @@ class NoteDatabse {
     List<Note> fetchedNotes = await isar.notes.where().findAll();
     currentNotes.clear();
     currentNotes.addAll(fetchedNotes);
+    notifyListeners();
+  }
+
+  //UPDATE
+  Future<void> updateNote(int id, String newText) async {
+    final existingNote = await isar.notes.get(id);
+    if (existingNote != null) {
+      existingNote.text = newText;
+      await isar.writeTxn(() => isar.notes.put(existingNote));
+      await fetchNotes();
+    }
   }
 
   //DELETE
+  Future<void> deleteNote(int id) async {
+    await isar.writeTxn(() => isar.notes.delete(id));
+    await fetchNotes();
+  }
 }
